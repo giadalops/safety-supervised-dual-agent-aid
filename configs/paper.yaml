@@ -1,0 +1,97 @@
+paper:
+  title: A Safety-Supervised Dual-Agent Reinforcement Learning Framework for Pediatric Automated Insulin Delivery
+  sampling_minutes: 3
+  episode_hours: 24
+  steps_per_episode: 480
+
+software_as_reported:
+  python: "3.14.3"
+  pytorch: "2.11.0"
+  stable_baselines3: "2.7.1"
+  sb3_contrib: "2.7.1"
+  simglucose: "0.2.11"
+  numpy: "2.4.4"
+  scipy: "1.17.1"
+  optuna: "4.8.0"
+
+controller:
+  target_glucose: 112.0
+  primary_action_count: 21
+  primary_max_u: 0.40
+  forecast_minutes: 30
+  prediction_thresholds: [220.0, 250.0]
+  correction_gains: [0.32, 0.52]
+  correction_min_u: 0.02
+  correction_refractory_minutes: 20
+  max_30min_u: 0.8
+  predictive_low_threshold: 98.0
+  mask:
+    low_glucose: 90.0
+    slope_low_glucose: 120.0
+    mild_high_glucose: 160.0
+    severe_high_glucose: 200.0
+    rapid_descent: -0.5
+    rising: 0.2
+    mild_min_action: 10
+    severe_min_action: 15
+  safety_factors: [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20]
+  safety_reward:
+    lambda_pred: 1.0
+    lambda_ins: 0.12
+    lambda_dev: 0.02
+
+training:
+  initialization_seeds: [11, 22, 33, 44, 55]
+  policy_network: [64, 64]
+  activation: tanh
+  optimizer: Adam
+  initialization: orthogonal
+  primary:
+    algorithm: MaskablePPO
+    episodes: 50
+    n_steps: 480
+    n_epochs: 30
+    learning_rate: 0.0005
+    gamma: 0.99
+    gae_lambda: 0.95
+    batch_size: 120
+    clip_range: 0.2
+  safety:
+    algorithm: PPO
+    episodes: 150
+    n_steps: 480
+    n_epochs: 20
+    learning_rate: 0.0003
+    gamma: 0.995
+    gae_lambda: 0.95
+    batch_size: 120
+    clip_range: 0.2
+
+scenario_seeds:
+  primary_training: [1000, 1049]
+  safety_training: [2000, 2149]
+  validation: [3000, 3049]
+  final_test: [4000, 4199]
+
+meals:
+  carbohydrate_g: [40, 15, 60, 10, 55]
+  carbohydrate_noise_sd_g: 10.0
+  time_jitter_minutes: 30
+  nominal_times_minutes: [480, 630, 780, 990, 1140]
+  announced_to_rl_controller: false
+
+iob_proxy:
+  horizon_minutes: 240
+  decay: linear
+
+subjects:
+  - {name: "child#001", age: 9, weight_kg: 34.56, cr_g_per_u: 25, cf_mgdl_per_u: 42.72, tdi_u_day: 17.47, k_abs_min_inv: 0.13, vg_dl_kg: 1.92}
+  - {name: "child#002", age: 9, weight_kg: 28.53, cr_g_per_u: 23, cf_mgdl_per_u: 36.92, tdi_u_day: 18.18, k_abs_min_inv: 0.55, vg_dl_kg: 1.84}
+  - {name: "child#003", age: 8, weight_kg: 41.23, cr_g_per_u: 22, cf_mgdl_per_u: 31.05, tdi_u_day: 16.02, k_abs_min_inv: 0.10, vg_dl_kg: 0.74}
+  - {name: "child#004", age: 12, weight_kg: 35.52, cr_g_per_u: 25, cf_mgdl_per_u: 40.72, tdi_u_day: 19.81, k_abs_min_inv: 0.23, vg_dl_kg: 2.07}
+  - {name: "child#005", age: 7, weight_kg: 37.79, cr_g_per_u: 21, cf_mgdl_per_u: 42.80, tdi_u_day: 17.80, k_abs_min_inv: 0.03, vg_dl_kg: 1.15}
+  - {name: "child#006", age: 8, weight_kg: 41.00, cr_g_per_u: 19, cf_mgdl_per_u: 39.98, tdi_u_day: 20.22, k_abs_min_inv: 0.05, vg_dl_kg: 1.71}
+  - {name: "child#007", age: 9, weight_kg: 45.53, cr_g_per_u: 18, cf_mgdl_per_u: 24.99, tdi_u_day: 36.21, k_abs_min_inv: 0.03, vg_dl_kg: 1.73}
+  - {name: "child#008", age: 10, weight_kg: 23.73, cr_g_per_u: 15, cf_mgdl_per_u: 30.88, tdi_u_day: 21.49, k_abs_min_inv: 0.13, vg_dl_kg: 2.03}
+  - {name: "child#009", age: 7, weight_kg: 35.53, cr_g_per_u: 25, cf_mgdl_per_u: 35.31, tdi_u_day: 17.39, k_abs_min_inv: 0.16, vg_dl_kg: 1.90}
+  - {name: "child#010", age: 12, weight_kg: 35.21, cr_g_per_u: 20, cf_mgdl_per_u: 28.18, tdi_u_day: 29.22, k_abs_min_inv: 0.22, vg_dl_kg: 1.81}
